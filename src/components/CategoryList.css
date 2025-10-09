@@ -1,0 +1,39 @@
+.category-item {
+  transition: transform 0.3s ease;
+}
+
+.category-link {
+  text-decoration: none;
+  color: #333;
+}
+
+.category-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 10px;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.category-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.category-name {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.category-item:hover {
+  transform: translateY(-5px);
+}
+
+.category-item:hover .category-circle {
+  border-color: #04b58c;
+  box-shadow: 0 4px 15px rgba(0, 200, 150, 0.3);
+}
