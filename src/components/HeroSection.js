@@ -10,7 +10,7 @@ function HeroSection() {
   }}>
       <h1 className="display-4 text-white">Bienvenue chez Biopara </h1>
       <p className="lead text-white">Votre parapharmacie en ligne avec les meilleurs produits au meilleur prix</p>
-      <Button variant="success" size="lg">Voir nos produits Voir nos produits</Button>
+      <Button variant="success" size="lg">Voir nos produits</Button>
     </div>
   );
 }
