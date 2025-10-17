@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { Form, Button, Container, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -12,14 +13,21 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8000/api/login", {
-        email,
-        password,
-      });
-      localStorage.setItem("token", response.data.token);
-      navigate("/");
+      const response = await axios.post(
+        "http://localhost/parapharmacie-project/login_user.php",
+        { email, mot_de_passe: password },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+
+      if (user.role === "admin") navigate("/dashboard");
+      else navigate("/home");
     } catch (err) {
-      alert("Email ou mot de passe incorrect !");
+      const msg = err.response?.data?.message || "Email ou mot de passe incorrect !";
+      alert(msg);
     }
   };
 
@@ -36,6 +44,7 @@ function Login() {
                 placeholder="Entrez votre email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </Form.Group>
             <Form.Group className="mb-4">
@@ -45,23 +54,16 @@ function Login() {
                 placeholder="Entrez votre mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </Form.Group>
-            <Button
-              variant="success"
-              type="submit"
-              className="w-100 py-2 rounded-pill"
-            >
+            <Button variant="success" type="submit" className="w-100 py-2 rounded-pill">
               Se connecter
             </Button>
           </Form>
           <p className="text-center mt-3 text-muted">
             Pas encore de compte ?{" "}
-            <span
-              className="text-success fw-semibold link-hover"
-              style={{ cursor: "pointer" }}
-              onClick={() => navigate("/register")}
-            >
+            <span className="text-success fw-semibold link-hover" style={{ cursor: "pointer" }} onClick={() => navigate("/register")}>
               Inscrivez-vous
             </span>
           </p>
