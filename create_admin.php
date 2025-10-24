@@ -1,55 +1,56 @@
 <?php
-// create_admin.php
-// Usage: éditer email et password ci-dessous, puis ouvrir http://localhost/parapharmacie-project/create_admin.php
-// Après vérification supprimez ce fichier pour des raisons de sécurité.
+$data = json_decode(file_get_contents("php://input"), true);
+file_put_contents("log_add_to_cart.txt", print_r($data, true), FILE_APPEND);
 
-$host = "localhost";
-$dbname = "Bio_Para";
-$user = "root";
-$pass = "";
-
-$email = "admin@site.com";   // <-- change si tu veux un autre email
-$password = "admin123";      // <-- change le mot de passe souhaité
-$nom = "Admin Principal";
-$phone = "12345678";
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Erreur DB: " . $e->getMessage());
+// Vérif données
+if (!isset($data['id_article'], $data['quantity'], $data['price'], $data['id_user'])) {
+    echo json_encode(['error' => 'Données manquantes']);
+    exit();
 }
 
-// Générer le hash
-$hash = password_hash($password, PASSWORD_DEFAULT);
+$id_article = intval($data['id_article']);
+$quantite = intval($data['quantity']);
+$prix_unitaire = floatval($data['price']);
+$id_user = intval($data['id_user']);
+$total = $prix_unitaire * $quantite;
 
-// Vérifier si un user avec cet email existe
-$stmt = $pdo->prepare("SELECT id_user FROM user WHERE email = :email LIMIT 1");
-$stmt->execute(['email' => $email]);
-$exists = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($id_article <= 0 || $quantite <= 0 || $prix_unitaire <= 0 || $id_user <= 0) {
+    echo json_encode(['error' => 'Valeurs invalides']);
+    exit();
+}
 
-if ($exists) {
-    // Mettre à jour le mot de passe et role admin
-    $upd = $pdo->prepare("UPDATE user SET nom_complet = :nom, mot_de_passe = :hash, phone = :phone, role = 'admin' WHERE email = :email");
-    $upd->execute([
-        ':nom' => $nom,
-        ':hash' => $hash,
-        ':phone' => $phone,
-        ':email' => $email
+// Vérifier produit
+$stmtProduct = $conn->prepare("SELECT id_article FROM articles WHERE id_article = ?");
+$stmtProduct->execute([$id_article]);
+if (!$stmtProduct->fetch()) {
+    echo json_encode(['error' => 'Produit inexistant']);
+    exit();
+}
+
+// Vérifier panier
+$stmtCheck = $conn->prepare("SELECT id_panier, quantite FROM panier WHERE id_article = ? AND id_user = ?");
+$stmtCheck->execute([$id_article, $id_user]);
+$existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+if ($existing) {
+    $newQuantite = $existing['quantite'] + $quantite;
+    $newTotal = $prix_unitaire * $newQuantite;
+
+    $stmtUpdate = $conn->prepare("UPDATE panier SET quantite = ?, total = ? WHERE id_panier = ? AND id_user = ?");
+    $stmtUpdate->execute([$newQuantite, $newTotal, $existing['id_panier'], $id_user]);
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Quantité mise à jour',
+        'new_quantity' => $newQuantite
     ]);
-    echo "Admin mis à jour pour l'email $email\n";
 } else {
-    // Insérer nouvel admin
-    $ins = $pdo->prepare("INSERT INTO user (nom_complet, email, mot_de_passe, phone, role) VALUES (:nom, :email, :hash, :phone, 'admin')");
-    $ins->execute([
-        ':nom' => $nom,
-        ':email' => $email,
-        ':hash' => $hash,
-        ':phone' => $phone
-    ]);
-    echo "Admin créé pour l'email $email\n";
-}
+    $stmtInsert = $conn->prepare("INSERT INTO panier (id_user, id_article, quantite, prix_unitaire, total) VALUES (?, ?, ?, ?, ?)");
+    $stmtInsert->execute([$id_user, $id_article, $quantite, $prix_unitaire, $total]);
 
-echo "Mot de passe utilisé (pour test) : $password\n";
-echo "=> SUPPRIMEZ create_admin.php dès que tout fonctionne !";
+    echo json_encode([
+        'success' => true,
+        'message' => 'Produit ajouté au panier',
+        'id_panier' => $conn->lastInsertId()
+    ]);
+}
