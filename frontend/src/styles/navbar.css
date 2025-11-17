@@ -1,0 +1,38 @@
+/* Style global de la navbar */
+.navbar-custom {
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.navbar-custom.scrolled {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.navbar-custom .nav-link {
+  color: #333;
+  font-weight: 500;
+  margin-right: 15px;
+  transition: color 0.3s;
+}
+
+.navbar-custom .nav-link:hover {
+  color: #F5D2D2;
+}
+
+.navbar-custom .navbar-brand img {
+  transition: transform 0.3s;
+}
+
+.navbar-custom .navbar-brand img:hover {
+  transform: scale(1.05);
+}
+
+.navbar-custom .badge {
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.navbar-toggler {
+  border-color: #fd0d9d;
+}
